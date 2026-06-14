@@ -304,7 +304,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const BASE = 'https://api.sheety.co/c45c4a637cb529801a9804c502d8d152/staydineWorkersApp';
+// ✅ Paste your Google Apps Script Web App URL below (from Deploy → Manage deployments)
+const BASE = 'https://script.google.com/macros/s/AKfycbz-AJ3wKI0W6Cwso7ToxzOrbohKo9eXpoKuSSG7SSgTI9tUu8W5rBMlC1m5TXZ86984/exec';
 const ADMIN = 'Maanya';
 const TEAM = ['Maanya', 'Kavish', 'Soham', 'Rashi'];
 
@@ -331,14 +332,14 @@ function showPage(page, el) {
   renderPage();
 }
 
-/* ── Sheety helpers ── */
+/* ── Apps Script helpers ── */
 async function safeFetch(url, key) {
   try {
-    const r = await fetch(url);
-    if (!r.ok) { console.warn(`Sheety ${key} ${r.status}`); return []; }
+    const r = await fetch(url, { redirect: 'follow' });
+    if (!r.ok) { console.warn(`API ${key} ${r.status}`); return []; }
     const j = await r.json();
     return j[key] || [];
-  } catch(e) { console.warn(`Sheety ${key} failed:`, e); return []; }
+  } catch(e) { console.warn(`API ${key} failed:`, e); return []; }
 }
 
 async function fetchAll() {
@@ -744,10 +745,11 @@ async function toggleTask(id) {
   if (!task) return;
   const newDone = !isDone(task.done);
   try {
-    const r = await fetch(`${BASE}/tasks/${id}`, {
-      method: 'PUT',
+    const r = await fetch(`${BASE}/tasks/${id}?method=PUT`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task: { done: newDone } })
+      body: JSON.stringify({ task: { done: newDone } }),
+      redirect: 'follow'
     });
     if (!r.ok) { showToast('Could not update task'); return; }
     task.done = newDone;
@@ -762,11 +764,11 @@ async function toggleTask(id) {
 
 async function post(sheet, body) {
   try {
-    const r = await fetch(`${BASE}/${sheet}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const r = await fetch(`${BASE}/${sheet}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body), redirect: 'follow' });
     if (!r.ok) { showToast(`Error saving to ${sheet}`); return null; }
     const j = await r.json();
     return j[Object.keys(j)[0]]; // returns the created row
-  } catch(e) { showToast('Network error — check Sheety'); return null; }
+  } catch(e) { showToast('Network error — check Apps Script'); return null; }
 }
 
 /* ── Utils ── */
