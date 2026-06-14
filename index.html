@@ -681,8 +681,8 @@ async function submitTask() {
     linkedGoal: document.getElementById('taskGoal').value,
     done: false
   }};
-  const newItem = await post('goals', body);
-  if (newItem) cache.goals.push(newItem);
+  const newItem = await post('tasks', body);
+  if (newItem) cache.tasks.push(newItem);
   closeModal('taskModal');
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDesc').value = '';
