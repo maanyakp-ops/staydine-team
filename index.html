@@ -659,12 +659,13 @@ async function submitGoal() {
   const title = document.getElementById('goalTitle').value.trim();
   if (!title) return showToast('Title is required');
   const body = { goal: { title, description: document.getElementById('goalDesc').value.trim(), startDate: document.getElementById('goalStart').value, endDate: document.getElementById('goalEnd').value, addedBy: currentUser }};
-  await post('goals', body);
+  const newItem = await post('goals', body);
+  if (newItem) cache.goals.push(newItem);
   closeModal('goalModal');
   document.getElementById('goalTitle').value = '';
   document.getElementById('goalDesc').value = '';
   showToast('Goal added ✓');
-  renderPage();
+  document.getElementById('mainContent').innerHTML = renderGoals();
 }
 
 async function submitTask() {
@@ -680,12 +681,13 @@ async function submitTask() {
     linkedGoal: document.getElementById('taskGoal').value,
     done: false
   }};
-  await post('tasks', body);
+  const newItem = await post('goals', body);
+  if (newItem) cache.goals.push(newItem);
   closeModal('taskModal');
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDesc').value = '';
   showToast('Task added ✓');
-  renderPage();
+  document.getElementById('mainContent').innerHTML = renderTasks();
 }
 
 async function submitLink() {
@@ -693,43 +695,47 @@ async function submitLink() {
   const url = document.getElementById('linkUrl').value.trim();
   if (!title || !url) return showToast('Label and URL required');
   const body = { link: { title, url, category: document.getElementById('linkCat').value.trim(), addedBy: currentUser }};
-  await post('links', body);
+  const newItem = await post('links', body);
+  if (newItem) cache.links.push(newItem);
   closeModal('linkModal');
   document.getElementById('linkLabel').value = '';
   document.getElementById('linkUrl').value = '';
   document.getElementById('linkCat').value = '';
   showToast('Link added ✓');
-  renderPage();
+  document.getElementById('mainContent').innerHTML = renderLinks();
 }
 
 async function submitStandup() {
   const body = { standup: { user: currentUser, date: new Date().toISOString().slice(0,10), yesterday: document.getElementById('suYesterday').value.trim(), today: document.getElementById('suToday').value.trim(), blockers: document.getElementById('suBlockers').value.trim() }};
-  await post('standup', body);
+  const newItem = await post('standup', body);
+  if (newItem) cache.standup.push(newItem);
   closeModal('standupModal');
   showToast('Standup posted ✓');
-  renderPage();
+  document.getElementById('mainContent').innerHTML = renderStandup();
 }
 
 async function submitShipped() {
   const text = document.getElementById('shippedText').value.trim();
   if (!text) return showToast('Write what shipped');
   const body = { shipped: { text, addedBy: currentUser, date: new Date().toISOString().slice(0,10) }};
-  await post('shipped', body);
+  const newItem = await post('shipped', body);
+  if (newItem) cache.shipped.push(newItem);
   closeModal('shippedModal');
   document.getElementById('shippedText').value = '';
   showToast('Logged ✓');
-  renderPage();
+  document.getElementById('mainContent').innerHTML = renderShipped();
 }
 
 async function submitAnn() {
   const message = document.getElementById('annText').value.trim();
   if (!message) return showToast('Write your announcement');
   const body = { announcement: { message, date: new Date().toISOString().slice(0,10), pinned: true }};
-  await post('announcements', body);
+  const newItem = await post('announcements', body);
+  if (newItem) cache.announcements.push(newItem);
   closeModal('annModal');
   document.getElementById('annText').value = '';
   showToast('Posted ✓');
-  renderPage();
+  document.getElementById('mainContent').innerHTML = renderHome();
 }
 
 /* ── Toggle task done ── */
@@ -757,8 +763,10 @@ async function toggleTask(id) {
 async function post(sheet, body) {
   try {
     const r = await fetch(`${BASE}/${sheet}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    if (!r.ok) showToast(`Error saving to ${sheet}`);
-  } catch(e) { showToast('Network error — check Sheety'); }
+    if (!r.ok) { showToast(`Error saving to ${sheet}`); return null; }
+    const j = await r.json();
+    return j[Object.keys(j)[0]]; // returns the created row
+  } catch(e) { showToast('Network error — check Sheety'); return null; }
 }
 
 /* ── Utils ── */
